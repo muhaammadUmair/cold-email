@@ -31,5 +31,10 @@
                 <i class="bi bi-envelope-fill"></i> Email Logs
             </a>
         </div>
+        <div class="nav-item">
+            <a href="{{ route('schedule-jobs.index') }}" class="{{ request()->routeIs('schedule-jobs.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-check"></i> Schedule Jobs
+            </a>
+        </div>
     </div>
 </div>

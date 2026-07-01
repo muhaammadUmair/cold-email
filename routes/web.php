@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmailLogController;
+use App\Http\Controllers\ScheduleJobController;
 \Log::info('Login Attempt', [
     'username' => 'TestUser',
     'password' => 'TestPassword',
@@ -22,4 +23,5 @@ Route::middleware('auth')->group(function () {
     Route::resource('leads', LeadController::class);
     Route::resource('companies', CompanyController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
     Route::resource('email-logs', EmailLogController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
+    Route::resource('schedule-jobs', ScheduleJobController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
 });
