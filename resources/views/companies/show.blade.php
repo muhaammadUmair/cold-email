@@ -7,6 +7,15 @@
     <h2>Company Research #{{ $company->id }}</h2>
 </div>
 
+@if (session('status'))
+    <div class="alert alert-success">{{ session('status') }}</div>
+@endif
+
+<div class="mb-3">
+    <a href="{{ route('companies.edit', $company->id) }}" class="btn btn-warning">Edit Company Research</a>
+    <a href="{{ route('companies.index') }}" class="btn btn-secondary">Back</a>
+</div>
+
 <div class="card bg-white p-3">
     <p><strong>Lead:</strong> {{ $company->lead->first_name ?? '-' }} {{ $company->lead->last_name ?? '' }}</p>
     <p><strong>Salesforce Opportunity:</strong> {{ $company->salesforce_opportunity ?? '-' }}</p>

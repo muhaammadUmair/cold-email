@@ -8,7 +8,10 @@
         <h2>Lead Detail</h2>
         <p>Full information of the lead</p>
     </div>
-    <a href="{{ route('leads.index') }}" class="btn btn-secondary">← Back to Leads</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('leads.edit', $lead->id) }}" class="btn btn-warning">Edit Lead</a>
+        <a href="{{ route('leads.index') }}" class="btn btn-secondary">← Back to Leads</a>
+    </div>
 </div>
 
 <div class="card">

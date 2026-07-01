@@ -36,6 +36,7 @@
                 <td>{{ $log->sent_at ? $log->sent_at->format('d M Y H:i') : '-' }}</td>
                 <td>
                     <a href="{{ route('email-logs.show', $log->id) }}" class="btn btn-sm btn-primary">View</a>
+                    <a href="{{ route('email-logs.edit', $log->id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('email-logs.destroy', $log->id) }}" method="POST" style="display:inline">
                         @csrf
                         @method('DELETE')

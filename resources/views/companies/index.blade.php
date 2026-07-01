@@ -36,6 +36,7 @@
                 <td>{{ $company->created_at->format('d M Y') }}</td>
                 <td>
                     <a href="{{ route('companies.show', $company->id) }}" class="btn btn-sm btn-primary">View</a>
+                    <a href="{{ route('companies.edit', $company->id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('companies.destroy', $company->id) }}" method="POST" style="display:inline">
                         @csrf
                         @method('DELETE')

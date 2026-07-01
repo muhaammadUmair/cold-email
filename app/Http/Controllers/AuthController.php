@@ -14,16 +14,27 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('leads.index');
         }
+        \Log::info('Login Attempt', [
+            'username' => 'request->username',
+            'password' => 'request->password',
+        ]);
         return view('welcome');
     }
 
     public function login(Request $request)
     {
+        \Log::info('Login Attempt', [
+            'username' => $request->username,
+            'password' => $request->password,
+        ]);
         $request->validate([
             'username' => 'required',
             'password' => 'required',
         ]);
-
+        \Log::info('Login Attempt', [
+            'username' => $request->username,
+            'password' => $request->password,
+        ]);
         $user = User::where('username', $request->username)->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
