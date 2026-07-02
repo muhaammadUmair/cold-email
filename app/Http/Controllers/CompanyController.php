@@ -24,6 +24,14 @@ class CompanyController extends Controller
             'salesforce_opportunity' => ['nullable', 'string', 'max:255'],
             'claude_prompt' => ['nullable', 'string'],
             'generated_email' => ['nullable', 'string'],
+            'home_url' => ['nullable', 'string', 'max:2048'],
+            'home_content' => ['nullable', 'string'],
+            'about_url' => ['nullable', 'string', 'max:2048'],
+            'about_content' => ['nullable', 'string'],
+            'career_url' => ['nullable', 'string', 'max:2048'],
+            'career_content' => ['nullable', 'string'],
+            'news_url' => ['nullable', 'string', 'max:2048'],
+            'news_content' => ['nullable', 'string'],
         ]);
 
         $company = CompanyResearch::create($validated);
@@ -63,6 +71,14 @@ class CompanyController extends Controller
             'salesforce_opportunity' => ['nullable', 'string', 'max:255'],
             'claude_prompt' => ['nullable', 'string'],
             'generated_email' => ['nullable', 'string'],
+            'home_url' => ['nullable', 'string', 'max:2048'],
+            'home_content' => ['nullable', 'string'],
+            'about_url' => ['nullable', 'string', 'max:2048'],
+            'about_content' => ['nullable', 'string'],
+            'career_url' => ['nullable', 'string', 'max:2048'],
+            'career_content' => ['nullable', 'string'],
+            'news_url' => ['nullable', 'string', 'max:2048'],
+            'news_content' => ['nullable', 'string'],
         ]);
 
         $company->update($validated);
