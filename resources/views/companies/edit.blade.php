@@ -86,6 +86,70 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Home URL</label>
+                <input type="url" name="home_url" class="form-control @error('home_url') is-invalid @enderror" value="{{ old('home_url', $company->home_url) }}" placeholder="https://example.com">
+                @error('home_url')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Home Content</label>
+                <textarea name="home_content" rows="6" class="form-control @error('home_content') is-invalid @enderror">{{ old('home_content', $company->home_content) }}</textarea>
+                @error('home_content')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">About URL</label>
+                <input type="url" name="about_url" class="form-control @error('about_url') is-invalid @enderror" value="{{ old('about_url', $company->about_url) }}" placeholder="https://example.com/about">
+                @error('about_url')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">About Content</label>
+                <textarea name="about_content" rows="6" class="form-control @error('about_content') is-invalid @enderror">{{ old('about_content', $company->about_content) }}</textarea>
+                @error('about_content')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Career URL</label>
+                <input type="url" name="career_url" class="form-control @error('career_url') is-invalid @enderror" value="{{ old('career_url', $company->career_url) }}" placeholder="https://example.com/careers">
+                @error('career_url')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Career Content</label>
+                <textarea name="career_content" rows="6" class="form-control @error('career_content') is-invalid @enderror">{{ old('career_content', $company->career_content) }}</textarea>
+                @error('career_content')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">News URL</label>
+                <input type="url" name="news_url" class="form-control @error('news_url') is-invalid @enderror" value="{{ old('news_url', $company->news_url) }}" placeholder="https://example.com/news">
+                @error('news_url')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">News Content</label>
+                <textarea name="news_content" rows="6" class="form-control @error('news_content') is-invalid @enderror">{{ old('news_content', $company->news_content) }}</textarea>
+                @error('news_content')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
     </div>
 

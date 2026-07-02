@@ -471,3 +471,14 @@ schedule_time TIME NOT NULL,
 created_at TIMESTAMP NULL DEFAULT NULL,
 updated_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-------company_research--------
+ALTER TABLE company_research
+ADD COLUMN home_url VARCHAR(2048) NULL AFTER generated_email,
+ADD COLUMN home_content LONGTEXT NULL AFTER home_url,
+ADD COLUMN about_url VARCHAR(2048) NULL AFTER home_content,
+ADD COLUMN about_content LONGTEXT NULL AFTER about_url,
+ADD COLUMN career_url VARCHAR(2048) NULL AFTER about_content,
+ADD COLUMN career_content LONGTEXT NULL AFTER career_url,
+ADD COLUMN news_url VARCHAR(2048) NULL AFTER career_content,
+ADD COLUMN news_content LONGTEXT NULL AFTER news_url;
