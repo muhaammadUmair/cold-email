@@ -6,6 +6,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\ScheduleJobController;
+use App\Http\Controllers\WebsiteResearchController;
 \Log::info('Login Attempt', [
     'username' => 'TestUser',
     'password' => 'TestPassword',
@@ -14,6 +15,9 @@ use App\Http\Controllers\ScheduleJobController;
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['GET', 'POST'], '/external/company-research/create', [WebsiteResearchController::class, 'createCompanyResearch'])
+    ->name('external.company-research.create')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
 // Protected routes
 Route::middleware('auth')->group(function () {
@@ -24,4 +28,5 @@ Route::middleware('auth')->group(function () {
     Route::resource('companies', CompanyController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
     Route::resource('email-logs', EmailLogController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
     Route::resource('schedule-jobs', ScheduleJobController::class)->only(['index', 'show', 'destroy', 'create', 'store', 'edit', 'update']);
+    Route::post('/website-research/discover-pages', [WebsiteResearchController::class, 'discoverPages'])->name('website-research.discover-pages');
 });
