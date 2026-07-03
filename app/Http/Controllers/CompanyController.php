@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateCompanyResearchEmailJob;
 use App\Models\CompanyResearch;
 use App\Models\Lead;
 use Illuminate\Http\Request;
@@ -35,6 +36,7 @@ class CompanyController extends Controller
         ]);
 
         $company = CompanyResearch::create($validated);
+        GenerateCompanyResearchEmailJob::dispatch($company->id);
 
         return redirect()->route('companies.show', $company)->with('status', 'Company research created successfully.');
     }
@@ -82,6 +84,10 @@ class CompanyController extends Controller
         ]);
 
         $company->update($validated);
+
+        if (empty($company->generated_email)) {
+            GenerateCompanyResearchEmailJob::dispatch($company->id);
+        }
 
         return redirect()->route('companies.show', $company)->with('status', 'Company research updated successfully.');
     }

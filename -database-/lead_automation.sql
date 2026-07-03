@@ -482,3 +482,6 @@ ADD COLUMN career_url VARCHAR(2048) NULL AFTER about_content,
 ADD COLUMN career_content LONGTEXT NULL AFTER career_url,
 ADD COLUMN news_url VARCHAR(2048) NULL AFTER career_content,
 ADD COLUMN news_content LONGTEXT NULL AFTER news_url;
+
+ALTER TABLE company_research
+ADD COLUMN email_generated_at TIMESTAMP NULL AFTER generated_email;

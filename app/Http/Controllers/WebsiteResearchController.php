@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateCompanyResearchEmailJob;
 use App\Models\CompanyResearch;
 use App\Models\Lead;
 use Illuminate\Http\Request;
@@ -86,6 +87,7 @@ class WebsiteResearchController extends Controller
 
         $safePayload = $this->filterExistingCompanyResearchColumns($payload);
         $companyResearch = CompanyResearch::create($safePayload);
+        GenerateCompanyResearchEmailJob::dispatch($companyResearch->id);
 
         return response()->json([
             'success' => true,

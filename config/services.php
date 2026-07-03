@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'gemini'),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+        'temperature' => env('GEMINI_TEMPERATURE', 0.4),
+        'max_output_tokens' => env('GEMINI_MAX_OUTPUT_TOKENS', 420),
+        'timeout' => env('GEMINI_TIMEOUT', 30),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'temperature' => env('OPENAI_TEMPERATURE', 0.4),
+        'max_output_tokens' => env('OPENAI_MAX_OUTPUT_TOKENS', 420),
+        'timeout' => env('OPENAI_TIMEOUT', 30),
+    ],
+
 ];
