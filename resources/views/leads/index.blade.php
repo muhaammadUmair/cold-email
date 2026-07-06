@@ -16,7 +16,7 @@
         <table class="table table-bordered mb-0">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>ID</th>
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Company</th>
@@ -30,9 +30,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($leads as $index => $lead)
+                @forelse($leads as $lead)
                 <tr>
-                    <td>{{ $leads->firstItem() + $index }}</td>
+                    <td>{{ $lead->id }}</td>
                     <td>{{ $lead->first_name }}</td>
                     <td>{{ $lead->last_name }}</td>
                     <td>{{ $lead->company }}</td>

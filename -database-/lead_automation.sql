@@ -483,5 +483,13 @@ ADD COLUMN career_content LONGTEXT NULL AFTER career_url,
 ADD COLUMN news_url VARCHAR(2048) NULL AFTER career_content,
 ADD COLUMN news_content LONGTEXT NULL AFTER news_url;
 
+-------company_research--------
 ALTER TABLE company_research
 ADD COLUMN email_generated_at TIMESTAMP NULL AFTER generated_email;
+
+-------leads--------
+ALTER TABLE leads ADD COLUMN company_research_id BIGINT UNSIGNED NULL AFTER last_name;
+
+-------company_research--------
+ALTER TABLE company_research
+ADD COLUMN website VARCHAR(2048) NULL AFTER lead_id;

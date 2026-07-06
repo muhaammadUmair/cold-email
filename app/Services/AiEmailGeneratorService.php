@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 class AiEmailGeneratorService
 {
+    private const DEFAULT_SENDER_NAME = 'Code Aligned';
+
     public function generate(CompanyResearch $companyResearch): ?string
     {
         $provider = (string) config('services.ai.provider', 'gemini');
@@ -30,6 +32,8 @@ class AiEmailGeneratorService
 
     private function generateWithOpenAi(string $context, string $apiKey): ?string
     {
+        $senderName = self::DEFAULT_SENDER_NAME;
+
         $response = Http::timeout((int) config('services.openai.timeout', 30))
             ->withToken($apiKey)
             ->post('https://api.openai.com/v1/chat/completions', [
@@ -39,7 +43,7 @@ class AiEmailGeneratorService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You write concise, personalized B2B cold emails. Keep the email human, specific, and under 160 words. Return only the email body, no markdown, no subject line.',
+                        'content' => 'You write concise, personalized B2B cold emails. Keep the email human, specific, and under 160 words. Return only the email body, no markdown, no subject line. Never include placeholders like [Your Name], [Company Name], or bracket tokens. End the email with the sender name "' . $senderName . '".',
                     ],
                     [
                         'role' => 'user',
@@ -54,11 +58,12 @@ class AiEmailGeneratorService
 
         $content = trim((string) data_get($response->json(), 'choices.0.message.content', ''));
 
-        return $content !== '' ? $content : null;
+        return $content !== '' ? $this->finalizeGeneratedEmail($content, $senderName) : null;
     }
 
     private function generateWithGemini(string $context, string $apiKey): ?string
     {
+        $senderName = self::DEFAULT_SENDER_NAME;
         $model = (string) config('services.gemini.model', 'gemini-1.5-flash');
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent';
 
@@ -72,7 +77,7 @@ class AiEmailGeneratorService
                     [
                         'parts' => [
                             [
-                                'text' => 'You write concise, personalized B2B cold emails. Keep the email human, specific, and under 160 words. Return only the email body, no markdown, no subject line.',
+                                'text' => 'You write concise, personalized B2B cold emails. Keep the email human, specific, and under 160 words. Return only the email body, no markdown, no subject line. Never include placeholders like [Your Name], [Company Name], or bracket tokens. End the email with the sender name "' . $senderName . '".',
                             ],
                             [
                                 'text' => $context,
@@ -88,7 +93,22 @@ class AiEmailGeneratorService
 
         $content = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));
 
-        return $content !== '' ? $content : null;
+        return $content !== '' ? $this->finalizeGeneratedEmail($content, $senderName) : null;
+    }
+
+    private function finalizeGeneratedEmail(string $content, string $senderName): string
+    {
+        $clean = trim($content);
+
+        $clean = preg_replace('/\[(your name|company name|your company)\]/i', $senderName, $clean) ?? $clean;
+        $clean = preg_replace('/\[.*?\]/', '', $clean) ?? $clean;
+        $clean = trim(preg_replace('/\n{3,}/', "\n\n", $clean) ?? $clean);
+
+        if (!preg_match('/\b' . preg_quote($senderName, '/') . '\b/i', $clean)) {
+            $clean .= "\n\nBest,\n" . $senderName;
+        }
+
+        return $clean;
     }
 
     private function buildCompactContext(CompanyResearch $companyResearch): string

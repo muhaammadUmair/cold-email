@@ -6,6 +6,7 @@ use App\Jobs\GenerateCompanyResearchEmailJob;
 use App\Models\CompanyResearch;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -16,37 +17,56 @@ class WebsiteResearchController extends Controller
     public function createCompanyResearch(Request $request)
     {
         $validated = $request->validate([
-            'lead_id' => ['nullable', 'integer', 'exists:leads,id'],
-            'email' => ['nullable', 'email'],
-            'website' => ['nullable', 'url'],
-            'first_name' => ['nullable', 'string', 'max:255'],
-            'last_name' => ['nullable', 'string', 'max:255'],
+            'lead_id' => ['required', 'integer', 'exists:leads,id'],
+                'website' => ['nullable', 'string', 'max:2048'],
             'salesforce_opportunity' => ['nullable', 'string', 'max:255'],
             'claude_prompt' => ['nullable', 'string'],
             'generated_email' => ['nullable', 'string'],
         ]);
 
-        if (empty($validated['lead_id']) && empty($validated['email'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Provide lead_id or email.'
-            ], 422);
-        }
+        $lead = Lead::findOrFail($validated['lead_id']);
 
-        $lead = $this->resolveLead($validated);
-
-        $website = $validated['website']
-            ?? $lead->website
-            ?? $this->websiteFromEmail($lead->email);
+            $website = $this->resolveResearchWebsite($validated['website'] ?? null, $lead);
 
         if (empty($website)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Website is required. Pass website in request or ensure lead has website/email domain.'
+                    'message' => 'No valid website found for this lead. Update leads.website with a full domain (example: example.com) or ensure lead email has a valid domain.'
             ], 422);
         }
 
         $website = $this->normalizeUrl($website);
+
+        $existingCompanyResearchId = $this->findExistingCompanyResearchIdByWebsite($lead->id, $website);
+
+        if (!empty($existingCompanyResearchId) && Schema::hasColumn('leads', 'company_research_id')) {
+            $lead->company_research_id = $existingCompanyResearchId;
+            $lead->save();
+
+            if (Schema::hasColumn('company_research', 'website')) {
+                $companyResearch = CompanyResearch::find($existingCompanyResearchId);
+
+                if ($companyResearch && empty($companyResearch->website)) {
+                    $companyResearch->website = $website ?: ($lead->email ?? null);
+                    $companyResearch->save();
+                }
+
+                if ($companyResearch && empty($companyResearch->generated_email)) {
+                    $this->generateCompanyResearchEmailNow($companyResearch);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Existing company research reused for matching website.',
+                'data' => [
+                    'id' => $existingCompanyResearchId,
+                    'lead_id' => $lead->id,
+                    'website' => $website,
+                    'reused' => true,
+                ],
+            ]);
+        }
 
         try {
             $homeResponse = $this->fetchPage($website);
@@ -71,6 +91,7 @@ class WebsiteResearchController extends Controller
 
         $payload = [
             'lead_id' => $lead->id,
+            'website' => $website ?: ($lead->email ?? null),
             'website_summary' => $homeContent,
             'salesforce_opportunity' => $validated['salesforce_opportunity'] ?? null,
             'claude_prompt' => $validated['claude_prompt'] ?? $this->defaultClaudePrompt($lead, $website, $homeContent),
@@ -87,7 +108,13 @@ class WebsiteResearchController extends Controller
 
         $safePayload = $this->filterExistingCompanyResearchColumns($payload);
         $companyResearch = CompanyResearch::create($safePayload);
-        GenerateCompanyResearchEmailJob::dispatch($companyResearch->id);
+
+        if (Schema::hasColumn('leads', 'company_research_id')) {
+            $lead->company_research_id = $companyResearch->id;
+            $lead->save();
+        }
+
+        $this->generateCompanyResearchEmailNow($companyResearch);
 
         return response()->json([
             'success' => true,
@@ -129,32 +156,6 @@ class WebsiteResearchController extends Controller
         return response()->json(array_values($pages));
     }
 
-    private function resolveLead(array $validated): Lead
-    {
-        if (!empty($validated['lead_id'])) {
-            return Lead::findOrFail($validated['lead_id']);
-        }
-
-        $email = strtolower(trim($validated['email']));
-        $lead = Lead::where('email', $email)->first();
-
-        if ($lead) {
-            return $lead;
-        }
-
-        $local = strstr($email, '@', true) ?: 'lead';
-        $parts = preg_split('/[._-]+/', $local) ?: [];
-        $firstName = $validated['first_name'] ?? ucfirst($parts[0] ?? 'Lead');
-        $lastName = $validated['last_name'] ?? ucfirst($parts[1] ?? 'Contact');
-
-        return Lead::create([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
-            'website' => $validated['website'] ?? $this->websiteFromEmail($email),
-        ]);
-    }
-
     private function websiteFromEmail(?string $email): ?string
     {
         if (empty($email) || !str_contains($email, '@')) {
@@ -167,6 +168,94 @@ class WebsiteResearchController extends Controller
         }
 
         return 'https://' . $domain;
+    }
+
+    private function resolveResearchWebsite(?string $requestWebsite, Lead $lead): ?string
+    {
+        $candidates = [
+            $requestWebsite,
+            $lead->website,
+            $this->websiteFromEmail($lead->email),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (empty($candidate)) {
+                continue;
+            }
+
+            $normalized = $this->normalizeUrl($candidate);
+
+            if ($this->isResolvableWebsiteHost($normalized)) {
+                return $normalized;
+            }
+        }
+
+        return null;
+    }
+
+    private function isResolvableWebsiteHost(string $url): bool
+    {
+        $host = $this->extractWebsiteHost($url);
+
+        if (empty($host)) {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return true;
+        }
+
+        if (strtolower($host) === 'localhost') {
+            return true;
+        }
+
+        return str_contains($host, '.');
+    }
+
+    private function findExistingCompanyResearchIdByWebsite(int $leadId, string $website): ?int
+    {
+        $targetHost = $this->extractWebsiteHost($website);
+
+        if (empty($targetHost)) {
+            return null;
+        }
+
+        $candidateLeads = Lead::query()
+            ->where('id', '!=', $leadId)
+            ->whereNotNull('website')
+            ->whereNotNull('company_research_id')
+            ->get(['website', 'company_research_id']);
+
+        foreach ($candidateLeads as $candidate) {
+            if ($this->extractWebsiteHost((string) $candidate->website) !== $targetHost) {
+                continue;
+            }
+
+            $companyResearchId = (int) $candidate->company_research_id;
+
+            if ($companyResearchId > 0 && CompanyResearch::whereKey($companyResearchId)->exists()) {
+                return $companyResearchId;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractWebsiteHost(string $url): ?string
+    {
+        $host = parse_url($this->normalizeUrl($url), PHP_URL_HOST);
+
+        if (empty($host)) {
+            return null;
+        }
+
+        $normalizedHost = strtolower($host);
+
+        if (str_starts_with($normalizedHost, 'www.')) {
+            $normalizedHost = substr($normalizedHost, 4);
+        }
+
+        return $normalizedHost;
     }
 
     private function normalizeUrl(string $url): string
@@ -331,5 +420,10 @@ class WebsiteResearchController extends Controller
         }
 
         return $filtered;
+    }
+
+    private function generateCompanyResearchEmailNow(CompanyResearch $companyResearch): void
+    {
+        Bus::dispatchSync(new GenerateCompanyResearchEmailJob($companyResearch->id));
     }
 }
