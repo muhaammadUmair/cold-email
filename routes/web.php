@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmailLogController;
+use App\Http\Controllers\LeadAutomationFlowController;
 use App\Http\Controllers\LeadGmailEmailController;
 use App\Http\Controllers\ScheduleJobController;
 use App\Http\Controllers\WebsiteResearchController;
@@ -19,6 +20,15 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::match(['GET', 'POST'], '/external/company-research/create', [WebsiteResearchController::class, 'createCompanyResearch'])
     ->name('external.company-research.create')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+Route::match(['GET', 'POST'], '/external/leads/process-next-unsent-email', [LeadAutomationFlowController::class, 'processNextUnsentLead'])
+    ->name('external.leads.process-next-unsent-email')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+Route::match(['GET', 'POST'], '/external/leads/process-next-company-research', [LeadAutomationFlowController::class, 'processNextPendingCompanyResearch'])
+    ->name('external.leads.process-next-company-research')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
 Route::match(['GET', 'POST'], '/leads/{lead}/send-gmail-email', LeadGmailEmailController::class)
     ->name('leads.send-gmail-email')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
