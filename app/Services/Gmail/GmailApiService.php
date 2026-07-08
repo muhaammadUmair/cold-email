@@ -44,8 +44,15 @@ class GmailApiService
         ];
     }
 
-    public function buildSubject(Lead $lead): string
+    public function buildSubject(Lead $lead, string $body): string
     {
+        $normalizedBody = trim((string) preg_replace('/\s+/', ' ', strip_tags($body)));
+        $subject = $this->subjectFromBody($normalizedBody);
+
+        if ($subject !== '') {
+            return $subject;
+        }
+
         $company = trim((string) ($lead->company_name_for_emails ?: $lead->company ?: ''));
 
         if ($company !== '') {
@@ -53,6 +60,41 @@ class GmailApiService
         }
 
         return (string) config('services.gmail.subject', 'Quick question');
+    }
+
+    private function subjectFromBody(string $body): string
+    {
+        if ($body === '') {
+            return '';
+        }
+
+        $withoutGreeting = preg_replace('/^(hi|hello|hey)\b[^\n.!?]*[\n.!?]\s*/i', '', $body) ?? $body;
+        $withoutSignoff = preg_replace('/\b(best|regards|thanks|thank you|sincerely)\b[\s\S]*$/i', '', $withoutGreeting) ?? $withoutGreeting;
+
+        $candidate = trim((string) preg_split('/(?<=[.!?])\s+/', $withoutSignoff, 2)[0]);
+
+        if ($candidate === '') {
+            return '';
+        }
+
+        $candidate = preg_replace('/[^\pL\pN\s\-,:]/u', '', $candidate) ?? $candidate;
+        $candidate = trim((string) preg_replace('/\s+/', ' ', $candidate));
+
+        if ($candidate === '') {
+            return '';
+        }
+
+        $words = preg_split('/\s+/', $candidate) ?: [];
+
+        if (count($words) < 3) {
+            return '';
+        }
+
+        if (count($words) > 10) {
+            $candidate = implode(' ', array_slice($words, 0, 10));
+        }
+
+        return Str::limit($candidate, 72, '');
     }
 
     private function resolveSenderName(): string

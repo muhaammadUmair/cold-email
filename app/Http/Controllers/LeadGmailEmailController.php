@@ -44,7 +44,7 @@ class LeadGmailEmailController extends Controller
         try {
             $result = $gmailApiService->sendLeadEmail(
                 $lead,
-                $gmailApiService->buildSubject($lead),
+                $gmailApiService->buildSubject($lead, $generatedEmail),
                 $generatedEmail
             );
 

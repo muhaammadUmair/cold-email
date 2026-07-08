@@ -492,4 +492,6 @@ ALTER TABLE leads ADD COLUMN company_research_id BIGINT UNSIGNED NULL AFTER last
 
 -------company_research--------
 ALTER TABLE company_research
-ADD COLUMN website VARCHAR(2048) NULL AFTER lead_id;
+ALTER TABLE leads
+ADD COLUMN is_sent TINYINT(1) NOT NULL DEFAULT 0,
+ADD COLUMN sending_date DATETIME NULL;

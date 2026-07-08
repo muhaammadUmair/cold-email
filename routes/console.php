@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\LeadSequentialCompanyResearchProcessorService;
+use App\Services\LeadSequentialEmailProcessorService;
 use App\Models\ScheduleJob;
 use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
@@ -10,6 +12,28 @@ use Illuminate\Support\Facades\Schedule;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('leads:send-sequential {--once : Process only the first unsent lead}', function (LeadSequentialEmailProcessorService $processor) {
+    $result = $processor->processPendingLeads((bool) $this->option('once'));
+
+    $this->info($result['message']);
+    $this->line('Processed: ' . $result['processed']);
+    $this->line('Sent: ' . $result['sent']);
+    $this->line('Failed: ' . $result['failed']);
+})->purpose('Send unsent leads one-by-one in ascending lead id order');
+
+Artisan::command('leads:research-sequential', function (LeadSequentialCompanyResearchProcessorService $processor) {
+    $result = $processor->processNextLead();
+
+    $this->info($result['message']);
+    $this->line('Processed: ' . $result['processed']);
+
+    if (!empty($result['lead_id'])) {
+        $this->line('Lead ID: ' . $result['lead_id']);
+    }
+
+    $this->line('Success: ' . ($result['success'] ? 'yes' : 'no'));
+})->purpose('Process first lead with null company_research_id in ascending lead id order');
 
 Artisan::command('schedule-jobs:run', function () {
     $timezone = 'EST';
@@ -60,3 +84,8 @@ Schedule::command('schedule-jobs:run')
     ->everyMinute()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule-jobs-runner.log'));
+
+Schedule::command('leads:research-sequential')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/leads-research-sequential.log'));
