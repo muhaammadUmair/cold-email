@@ -55,4 +55,14 @@ return [
         'timeout' => env('OPENAI_TIMEOUT', 30),
     ],
 
+    'gmail' => [
+        'client_id' => env('GMAIL_CLIENT_ID'),
+        'client_secret' => env('GMAIL_CLIENT_SECRET'),
+        'refresh_token' => env('GMAIL_REFRESH_TOKEN'),
+        'sender_name' => env('GMAIL_SENDER_NAME', env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel'))),
+        'sender_email' => env('GMAIL_SENDER_EMAIL'),
+        'subject' => env('GMAIL_EMAIL_SUBJECT', 'Quick question'),
+        'timeout' => env('GMAIL_TIMEOUT', 30),
+    ],
+
 ];

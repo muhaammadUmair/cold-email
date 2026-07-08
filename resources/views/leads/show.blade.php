@@ -15,6 +15,14 @@
 </div>
 
 <div class="card">
+    @if (session('status'))
+        <div class="alert alert-success m-3 mb-0">{{ session('status') }}</div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger m-3 mb-0">{{ session('error') }}</div>
+    @endif
+
     <div class="card-header">
         <h5 class="mb-0">{{ $lead->first_name }} {{ $lead->last_name }}</h5>
     </div>
